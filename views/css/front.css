@@ -1,0 +1,15 @@
+.loyalty-flag {
+    margin-top: 5%; 
+    position: absolute; 
+    right: 0; 
+    z-index: 1;
+}
+.loyalty-flag-promotion {
+    background-color: orange;
+    color: white;
+    font-weight: 600;
+    margin-top: 10px; 
+    min-width: 60px;
+    padding: 5px;
+    text-align: center;
+}
