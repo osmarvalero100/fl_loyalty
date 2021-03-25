@@ -28,9 +28,17 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+require_once(_PS_MODULE_DIR_.'/fl_loyalty/classes/Loyalty.php');
+require_once(_PS_MODULE_DIR_.'/fl_loyalty/classes/LoyaltyPromotion.php');
+
 class Fl_loyalty extends Module
 {
     protected $config_form = false;
+
+    public $adminControllers = [
+        'adminAjaxLoyalty' => 'AdminAjaxLoyalty',
+        'adminAjaxLoyaltyPromotion' => 'AdminAjaxLoyaltyPromotion',
+    ];
 
     public function __construct()
     {
@@ -61,18 +69,77 @@ class Fl_loyalty extends Module
     {
         require_once __DIR__ . '/sql/install.php';
 
-        return parent::install() &&
+        if (parent::install() &&
+            $this->installTab() &&
             $this->registerHook('header') &&
             $this->registerHook('backOfficeHeader') &&
             $this->registerHook('displayLoyaltyFlagPromotion') &&
-            $this->registerHook('displayLoyaltyPromotion');
+            $this->registerHook('displayLoyaltyPromotion')) {
+            return true;
+        } else { // if something wrong return false
+            $this->_errors[] = $this->l('There was an error during the uninstallation. Please contact us through Addons website.');
+
+            return false;
+        }
     }
 
     public function uninstall()
     {
         require_once __DIR__ . '/sql/uninstall.php';
 
-        return parent::uninstall();
+        if (parent::uninstall() && $this->uninstallTab()) {
+            return true;
+        } else {
+            $this->_errors[] = $this->l('There was an error on module uninstall. Please contact us through Addons website');
+
+            return false;
+        }
+    }
+
+    /**
+     * This method is often use to create an ajax controller
+     *
+     * @return bool
+     */
+    public function installTab()
+    {
+        $result = true;
+
+        foreach ($this->adminControllers as $controller_name) {
+            $tab = new Tab();
+            $tab->class_name = $controller_name;
+            $tab->module = $this->name;
+            $tab->active = true;
+            $tab->id_parent = -1;
+            $tab->name = array_fill_keys(
+                Language::getIDs(false),
+                $this->displayName
+            );
+            $result = $result && $tab->add();
+        }
+
+        return $result;
+    }
+
+    /**
+     * uninstall tab
+     *
+     * @return bool
+     */
+    public function uninstallTab()
+    {
+        $result = true;
+
+        foreach ($this->adminControllers as $controller_name) {
+            $id_tab = (int) Tab::getIdFromClassName($controller_name);
+            $tab = new Tab($id_tab);
+
+            if (Validate::isLoadedObject($tab)) {
+                $result = $result && $tab->delete();
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -91,12 +158,22 @@ class Fl_loyalty extends Module
         
        $programs = Db::getInstance()->ExecuteS($sql);
 
+       $loyalty_ajax_link = $this->context->link->getAdminLink('AdminAjaxLoyalty');
+       $loyalty_promotions_ajax_link = $this->context->link->getAdminLink('AdminAjaxLoyaltyPromotion');
+
+       Media::addJsDef(array("loyalty_ajax_link" => $loyalty_ajax_link, "loyalty_promotions_ajax_link" => $loyalty_promotions_ajax_link));
+
         $this->context->smarty->assign([
-            'programs' => $programs,
-            'module_dir' => $this->_path
+            'programs' => Loyalty::getPrograms(),
+            'module_dir' => $this->_path,
             ]);
 
         $this->context->controller->addJS('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.15.3/xlsx.full.min.js');
+        $this->context->controller->addJS($this->_path.'views/js/loyalty.js');
+        $this->context->controller->addJS($this->_path.'views/js/loyalty-promotions.js');
+        $this->context->controller->addJS($this->_path.'views/js/config.js');
+
+        $this->context->controller->addCSS($this->_path.'views/css/config.css');
 
         return $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
     }
@@ -132,12 +209,10 @@ class Fl_loyalty extends Module
      */
     public function hookDisplayLoyaltyFlagPromotion(array $params)
     {
-        require_once(_PS_MODULE_DIR_.'/fl_loyalty/classes/Loyalty.php');
-
         $productId = Tools::getValue('id_product') ? Tools::getValue('id_product') : $params['product_id'];
         
         if ($productId) {
-            $promotions = Loyalty::getNamesPromotionsByProductId($productId);
+            $promotions = LoyaltyPromotion::getNamesPromotionsByProductId($productId);
 
             $this->context->smarty->assign('promotions', $promotions);
 
@@ -150,12 +225,10 @@ class Fl_loyalty extends Module
      */
     public function hookDisplayLoyaltyPromotion(array $params)
     {
-        require_once(_PS_MODULE_DIR_.'/fl_loyalty/classes/Loyalty.php');
-
         $productId = Tools::getValue('id_product');
         
         if ($productId) {
-            $promotions = Loyalty::getDescriptionsPromotionsByProductId($productId);
+            $promotions = LoyaltyPromotion::getDescriptionsPromotionsByProductId($productId);
 
             $this->context->smarty->assign('promotions', $promotions);
 
