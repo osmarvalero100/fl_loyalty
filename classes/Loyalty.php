@@ -1,34 +1,88 @@
 <?php
 
-class Loyalty
+class Loyalty extends ObjectModel
 {
+    public $id;
+
+    /** @var string name */
+    public $name;
+
+    /** @var string description */
+    public $description;
+
+    /** @var string properties loyalty program */
+    public $html_tags;
+
+    /** @var bool */
+    public $active = true;
+
+    /** @Column(type="datetime") */
+    public $date_end;
+
     /**
-     * Obtine el nombre de las promiciones asociadas al producto
+     * @see ObjectModel::$definition
      */
-    public static function getNamesPromotionsByProductId($productId)
+    public static $definition = [
+        'table' => 'fl_loyalty',
+        'primary' => 'id_loyalty',
+        'fields' => [
+            'name' => ['type' => self::TYPE_STRING, 'required' => true],
+            'description' => ['type' => self::TYPE_HTML, 'required' => true],
+            'html_tags' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml'],
+            'active' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool', 'required' => true],
+            'date_end' => ['type' => self::TYPE_DATE],
+        ],
+    ];
+
+    /**
+     * Loyalty constructor.
+     *
+     * @param int|null $idLoyalty
+     * @param int|null $idLang
+     * @param int|null $idShop
+     */
+    public function __construct($idLoyalty = null, $idLang = null, $idShop = null)
     {
-        $today = date('Y-m-d H:i:s');
-
-        $sql = "SELECT flp.promotion FROM "._DB_PREFIX_."fl_loyalty_promotions flp 
-            JOIN "._DB_PREFIX_."fl_loyalty fl ON fl.id_loyalty = flp.id_loyalty
-            WHERE flp.id_product = $productId AND fl.active = 1 AND fl.date_end > '".$today."'";
-
-        
-        return Db::getInstance()->ExecuteS($sql);
+        parent::__construct($idLoyalty, $idLang, $idShop);
     }
 
-    /**
-     * Obtine la descripción de las promiciones asociadas al producto
-     */
-    public static function getDescriptionsPromotionsByProductId($productId)
+    public static function getById($id)
     {
-        $today = date('Y-m-d H:i:s');
-
-        $sql = "SELECT flp.description FROM "._DB_PREFIX_."fl_loyalty_promotions flp 
-            JOIN "._DB_PREFIX_."fl_loyalty fl ON fl.id_loyalty = flp.id_loyalty
-            WHERE flp.id_product = $productId AND fl.active = 1 AND fl.date_end > '".$today."'";
-
-        return Db::getInstance()->ExecuteS($sql);
+        return Db::getInstance()->ExecuteS("SELECT `id_loyalty` AS id, `name`, `description`, `html_tags`, `active`, `date_end` 
+            FROM "._DB_PREFIX_."fl_loyalty 
+            WHERE `id_loyalty` = $id");
     }
-    
+
+    public static function getPrograms()
+	{
+        $sql = 'SELECT id_loyalty, name, description, active, date_end
+                FROM `'._DB_PREFIX_.'fl_loyalty`';
+
+		$result = Db::getInstance()->ExecuteS($sql);
+
+		if (!$result)
+			return [];
+		
+		return $result;
+	}
+
+    public static function getProgramById($idLoyalty) {
+        return DB::getInstance()->ExecuteS('SELECT `id_loyalty`, `name`, `description`, `active`, `date_end`
+            FROM `'._DB_PREFIX_.'fl_loyalty` WHERE `id_loyalty` = '.$idLoyalty
+        );
+    }
+
+    public function getHtmlTags() {
+        if (empty($this->html_tags)) {
+            return [];
+        }
+
+        return json_decode($this->html_tags);
+    }
+
+    public function setHtmlTags($data)
+    {
+        $this->html_tags = json_encode($data);
+    }
+
 }
