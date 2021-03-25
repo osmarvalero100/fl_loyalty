@@ -31,7 +31,7 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'fl_loyalty` (
     `description` text ,
     `html_tags` text ,
     `active` tinyint(1) unsigned NOT NULL DEFAULT 1,
-    `date_end` DATETIME DEFAULT \'2222-01-00 00:00:00\',
+    `date_end` DATETIME,
     PRIMARY KEY  (`id_loyalty`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
@@ -39,6 +39,7 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'fl_loyalty_promotions` 
     `id_loyalty_promotion` int(11) NOT NULL AUTO_INCREMENT,
     `id_product` int(11) unsigned NOT NULL,
     `id_loyalty` int(11) unsigned NOT NULL,
+    `id_shop` int(11) unsigned NOT NULL,
     `promotion` VARCHAR( 128 ) NOT NULL  ,
     `description` text,
     PRIMARY KEY  (`id_loyalty_promotion`)

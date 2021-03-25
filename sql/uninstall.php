@@ -32,7 +32,7 @@
 $sql = array();
 
 $sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'fl_loyalty`';
-$sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'fl_loyalty_legends`';
+$sql[] = 'DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'fl_loyalty_promotions`';
 
 foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {
