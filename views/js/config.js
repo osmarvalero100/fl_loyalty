@@ -15,9 +15,9 @@ $(function() {
                     res.id,
                     res.name,
                     res.description,
-                    null,
+                    res.html_tags,
                     res.active,
-                    null
+                    res.date_end
                     );
                 
                 if (parseInt(document.getElementById('id_loyalty').value) > 0) {
@@ -36,6 +36,14 @@ $(function() {
         })
         .catch(error => console.error('Error:', error));
     });
+    // Datapicker
+    document.querySelector('.datepicker').addEventListener('click', () => {
+        $('.datepicker').datetimepicker({
+            dateFormat: "yy-mm-dd",
+            timeFormat:  "hh:mm:ss"
+        });
+    })
+    
     // Btn Cancelar
     const btnCancelEditProgram = document.getElementById('btnLoyaltyReset');
     btnCancelEditProgram.addEventListener('click', () => {
@@ -91,23 +99,30 @@ $(function() {
     document.getElementById('propUrl').addEventListener('keyup', () => Loyalty.renderPreviewProperty());
 
     /********* LOYALTY PROMOTIONS *********/
-    // document.getElementById('promotions').addEventListener('change', e => {
-        
-    // });
+    document.getElementById('uploadProgram').addEventListener('change', e => {
+        const idLoyalty = e.target.value;
+        if (idLoyalty > 0) {
+            LoyaltyPromotions.renderPromotionPreview(idLoyalty);
+        } else {
+            document.getElementById('promotionPreview').innerHTML = '';
+        }
+    });
     document.getElementById('uploadAjaxPromotions').addEventListener('submit', e => {
         e.preventDefault();
-        const id_loyalty = document.getElementById('uploadProgram').value;
+        const idLoyalty = document.getElementById('uploadProgram').value;
         const excelPromotions = document.getElementById('promotions').files[0];
 
         LoyaltyPromotions.convertExcelToJson(excelPromotions)
         .then(res => {
             const totalPromotions = res.length;
             let progress = 0;
+            document.querySelector('.progress').style.display = 'block';
+            
             for (let key in res) {
                 if (res.hasOwnProperty(key)) {
                     const promotion = res[key];
                     let formData = new FormData();
-                    formData.append('id_loyalty', id_loyalty);
+                    formData.append('id_loyalty', idLoyalty);
                     if (res[key].hasOwnProperty('id_product'))
                         formData.append('id_product', promotion.id_product);
                     if (res[key].hasOwnProperty('ean13'))
@@ -131,9 +146,6 @@ $(function() {
                         console.log(res)
                     })
                     .catch(error => console.log('Error:', error));
-
-                    if (key == 2)
-                        return;
                 }
             }
         })
@@ -151,8 +163,32 @@ getDataProgram = id => {
             document.getElementById('id_loyalty').value = res.id;
             document.getElementById('name').value = res.name;
             document.getElementById('description').value = res.description;
+            document.getElementById('date_end').value = res.date_end;
             document.getElementById('btnLoyaltyReset').style.display = 'block';
             document.getElementById('btnLoyaltySubmit').innerText = 'Actualizar';
+        }
+    })
+    .catch(error => console.log('Error:', error));
+}
+// Change ststus
+changeStatus = id => {
+    const formData = new FormData();
+    formData.append("id_loyalty", id);
+
+    Loyalty.changeStatus(formData)
+    .then(res => res.json())
+    .then(res => {
+        if(res.id) {
+            const loyalty = new Loyalty(
+                res.id,
+                res.name,
+                res.description,
+                res.html_tags,
+                res.active,
+                res.date_end
+                );
+            
+            loyalty.updateRow();
         }
     })
     .catch(error => console.log('Error:', error));
@@ -183,7 +219,7 @@ const configLoyalty = id => {
     Loyalty.getById(id)
     .then(res => res.json())
     .then(res => {
-        if(res.id){
+        if(res.id) {
             const loyalty = new Loyalty(
                 res.id,
                 res.name,
@@ -215,6 +251,42 @@ const deletePropertyProgram = (id, idLoyalty) => {
         .catch(error => console.error('Error:', error));
     }
 }
+// List all promotions by loyalty program
+const listPromotions = id => {
+    document.querySelectorAll('#listPromotions div').forEach(element => element.remove());
+
+    LoyaltyPromotions.getPromotionByLoyalty(id)
+    .then(res => res.json())
+    .then(res => {
+        if (res) {
+            LoyaltyPromotions.renderListPromotions(res)
+            $('#modalListPromotions').modal();
+        } else {
+            document.getElementById('listPromotions').appendChild(document.createTextNode('Este programa de lealtad aún no tiene promociones.'));
+        }
+    })
+    .catch(error => console.log('Error:', error));
+}
+
+const deletePromotion = id => {
+    if (confirm('Se va a eliminar esta promoción')) {
+        const formData = new FormData();
+        formData.append('id_loyalty_promotion', id);
+        LoyaltyPromotions.delete(formData)
+        .then(res => res.json())
+        .then(res => {
+            if (res.success) {
+                document.querySelector(`.promotion-${id}`).remove();
+                alert('La promoción se eliminó.');
+            } else {
+                alert('Error al eliminar la promoción.')
+                console.log(res.error);
+            }
+        })
+        .catch(error => console.log('Error:', error));
+    }
+}
+
 // Delete all promotions of program
 const deletePromotionsByLoyalty = idLoyalty => {
     if (confirm('Se van a eliminar todas las promociones del programa de lealtad con id: '+idLoyalty)) {

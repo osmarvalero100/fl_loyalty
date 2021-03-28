@@ -28,8 +28,21 @@
 require_once(_PS_MODULE_DIR_.'/fl_loyalty/classes/Loyalty.php');
 require_once(_PS_MODULE_DIR_.'/fl_loyalty/classes/LoyaltyPromotion.php');
 
+/**
+ * @property LoyaltyPromotion $object
+ */
 class AdminAjaxLoyaltyPromotionController extends ModuleAdminController
 {
+    public function ajaxProcessGetPromotionByLoyalty()
+    {
+        try {
+            $promotions = LoyaltyPromotion::getAllByIdLoyalty(Tools::getvalue('id_loyalty'), $this->context->shop->id);
+            $this->ajaxRender(json_encode($promotions));
+        } catch (Exception $e) {
+            $this->ajaxRender(json_encode(['error' => $e->getMessage()]));
+        }
+    }
+
     public function ajaxProcessSave()
     {
         $idLoyalty = Tools::getValue('id_loyalty');
@@ -54,6 +67,10 @@ class AdminAjaxLoyaltyPromotionController extends ModuleAdminController
         $productId = Tools::getValue('id_product');
         if (empty($productId)) {
             $productId = LoyaltyPromotion::getProductIdByEan13(Tools::getValue('ean13'), $this->context->shop->id);
+            if (empty($productId)) {
+                $error = sprintf('EAN-13  %s,  no hay un producto asociado a este EAN.', Tools::getValue('ean13'));
+                $this->ajaxDie(json_encode(['error' => $error]));
+            }
         }
 
         $loyaltyPromotion = new LoyaltyPromotion();
@@ -71,6 +88,17 @@ class AdminAjaxLoyaltyPromotionController extends ModuleAdminController
             $this->ajaxRender(json_encode($data));
         }
         
+    }
+
+    public function ajaxProcessDelete()
+    {
+        try {
+            $loyaltyPromotion = new LoyaltyPromotion((int)Tools::getvalue('id_loyalty_promotion'));
+            $loyaltyPromotion->delete();
+            $this->ajaxRender(json_encode(['success' => true]));
+        } catch (Exception $e) {
+            $this->ajaxRender(json_encode(['error' => $e->getMessage()]));
+        }
     }
 
     public function ajaxProcessDeleteByLoyalty()

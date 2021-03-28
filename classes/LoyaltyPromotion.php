@@ -24,7 +24,7 @@ class LoyaltyPromotion extends ObjectModel
      */
     public static $definition = [
         'table' => 'fl_loyalty_promotions',
-        'primary' => 'id_loyalty',
+        'primary' => 'id_loyalty_promotion',
         'fields' => [
             'id_product' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true],
             'id_loyalty' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedId', 'required' => true],
@@ -35,9 +35,9 @@ class LoyaltyPromotion extends ObjectModel
     ];
 
     /**
-     * Loyalty constructor.
+     * LoyaltyPromotion constructor.
      *
-     * @param int|null $idLoyalty
+     * @param int|null $idLoyaltyPromotion
      * @param int|null $idLang
      * @param int|null $idShop
      */
@@ -63,6 +63,15 @@ class LoyaltyPromotion extends ObjectModel
         return Db::getInstance()->Execute($sql);
     }
 
+    public static function getAllByIdLoyalty($idLoyalty, $idShop)
+    {
+        $sql = "SELECT id_loyalty_promotion, id_product, id_loyalty, promotion, description 
+            FROM "._DB_PREFIX_."fl_loyalty_promotions 
+            WHERE id_loyalty = $idLoyalty AND id_shop = $idShop";
+        
+        return Db::getInstance()->ExecuteS($sql);
+    }
+
     /**
      * Obtine el nombre de las promiciones asociadas al producto
      */
@@ -72,9 +81,8 @@ class LoyaltyPromotion extends ObjectModel
 
         $sql = "SELECT flp.promotion FROM "._DB_PREFIX_."fl_loyalty_promotions flp 
             JOIN "._DB_PREFIX_."fl_loyalty fl ON fl.id_loyalty = flp.id_loyalty
-            WHERE flp.id_product = $productId AND fl.active = 1 AND fl.date_end > '".$today."' OR fl.date_end = ''";
+            WHERE flp.id_product = $productId AND fl.active = 1 AND (fl.date_end > '".$today."' OR fl.date_end = '')";
 
-        
         return Db::getInstance()->ExecuteS($sql);
     }
 
@@ -87,7 +95,7 @@ class LoyaltyPromotion extends ObjectModel
 
         $sql = "SELECT flp.description FROM "._DB_PREFIX_."fl_loyalty_promotions flp 
             JOIN "._DB_PREFIX_."fl_loyalty fl ON fl.id_loyalty = flp.id_loyalty
-            WHERE flp.id_product = $productId AND fl.active = 1 AND fl.date_end > '".$today."' OR fl.date_end = ''";
+            WHERE flp.id_product = $productId AND fl.active = 1 AND (fl.date_end > '".$today."' OR fl.date_end = '')";
 
         return Db::getInstance()->ExecuteS($sql);
     }

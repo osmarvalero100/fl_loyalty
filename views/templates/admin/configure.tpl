@@ -37,6 +37,7 @@
 								<th>Id</th>
 								<th>Programa</th>
 								<th>Descripción</th>
+								<th>Fecha de caducidad</th>
 								<th>Estado</th>
 								<th>Acciones</th>
 							</tr>
@@ -48,15 +49,19 @@
 										<td>{$program.id_loyalty}</td>
 										<td>{$program.name}</td>
 										<td>{$program.description}</td>
+										<td>{$program.date_end}</td>
 										<td>
-											<i class="material-icons action-{if $program.active}enabled{else}disabled{/if}">{if $program.active}check{else}clear{/if}</i>
+											<i onclick="changeStatus({$program.id_loyalty})" class="material-icons action-{if $program.active}enabled{else}disabled{/if}" title="{if $program.active}Desactivar{else}Activar{/if}">
+												{if $program.active}check{else}clear{/if}
+											</i>
 										</td>
 										<td>
 											<div class="row loyalty-programs-actions">
+												<div class="col-md-3"><i onclick="listPromotions({$program.id_loyalty})" title="Ver las promociones de este programa" class="icon icon-eye-open"></i></div>
 												<div class="col-md-3"><i onclick="configLoyalty({$program.id_loyalty})" title="Ajustes" class="icon icon-cog"></i></div>
-												<div class="col-md-3"><i onclick="deletePromotionsByLoyalty({$program.id_loyalty})" title="Borrar todas la promociones de este programa" class="icon icon-remove-circle"></i></div>
-												<div class="col-md-3"><i onclick="getDataProgram({$program.id_loyalty})" title="Editar" class="icon icon-edit"></i></div>
-												<div class="col-md-3"><i onclick="deleteProgram({$program.id_loyalty})" title="Eliminar" class="icon icon-trash"></i></div>
+												<div class="col-md-2"><i onclick="deletePromotionsByLoyalty({$program.id_loyalty})" title="Borrar todas las promociones de este programa" class="icon icon-remove-circle"></i></div>
+												<div class="col-md-2"><i onclick="getDataProgram({$program.id_loyalty})" title="Editar" class="icon icon-edit"></i></div>
+												<div class="col-md-2"><i onclick="deleteProgram({$program.id_loyalty})" title="Eliminar" class="icon icon-trash"></i></div>
 											</div>
 										</td>
 									</tr>
@@ -77,6 +82,12 @@
 						<div class="form-group">
 							<input type="text" class="form-control" id="description" name="description" placeholder="Descripción del programa de lealtad" required>
 						</div>
+						<div class="form-group">
+							<div class="input-group">
+								<div class="input-group-addon">Fecha de caducidad</div>
+								<input type="text" id="date_end" name="date_end" class="datepicker form-control" placeholder="YYYY-mm-dd hh:mm:ss">
+							</div>
+						</div>
 						<button id="btnLoyaltyReset" type="reset" class="btn btn-lg btn-block btn-clear">Cancelar</button>
 						<button id="btnLoyaltySubmit" type="submit" class="btn btn-primary btn-lg btn-block">Crear</button>
 					</form>
@@ -86,5 +97,7 @@
 	</div>
 
 	{include file='./promotions.tpl'}
+	
+	{include file='./_partials/modal/list-promotions.tpl'}
 
 </div>
