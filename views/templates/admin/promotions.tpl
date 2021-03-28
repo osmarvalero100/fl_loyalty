@@ -25,8 +25,8 @@
 
                 <div class="row">
                     <div class="progress">
-                        <div class="progress-bar" role="progressbar" aria-valuenow="2" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: 2%;">
-                            2%
+                        <div class="progress-bar" role="progressbar" aria-valuenow="1" aria-valuemin="0" aria-valuemax="100" style="min-width: 2em; width: 0%;">
+                            0%
                         </div>
                     </div>
                 </div>
@@ -35,6 +35,7 @@
         <div class="col-md-4">
             <div class="panel">
                 <h3><i class="icon icon-eye-open"></i> {l s='Vista previa' mod='fl_loyalty'}</h3>
+                <div id="promotionPreview"></div>
             </div>
         </div>
     </div>

@@ -1,7 +1,9 @@
 #formProgramProperty{
     display: none;
 }
-
+.progress {
+    display: none;
+}
 .loyalty-config i {
     cursor: pointer;
     font-size: large;

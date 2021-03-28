@@ -11,9 +11,10 @@ class Loyalty {
 
     #getStatusIcon() {
         let iconStatusClass = this.active ? 'enabled' : 'disabled';
-        let iconStatusText = this.active ? 'check' : 'clear';
+        let iconStatusText = this.active  ? 'check' : 'clear';
+        let title = this.active  ? 'Desactivar' : 'Activar';
 
-        return `<i class="material-icons action-${iconStatusClass}">${iconStatusText}</i>`;
+        return `<i title="${title}" onclick="changeStatus(${this.id})" class="material-icons action-${iconStatusClass}">${iconStatusText}</i>`;
     }
 
     static getUrlAjaxController(action) {
@@ -36,6 +37,13 @@ class Loyalty {
         });
     }
 
+    static async changeStatus(data) {
+        return await fetch(this.getUrlAjaxController('changeStatus'), {
+            method: 'POST',
+            body: data,
+        });
+    }
+
     static async remove(data) {
         return await fetch(this.getUrlAjaxController('remove'), {
             method: 'POST',
@@ -47,6 +55,7 @@ class Loyalty {
         document.getElementById('id_loyalty').value = '';
         document.getElementById('name').value = '';
         document.getElementById('description').value = '';
+        document.getElementById('date_end').value = '';
         document.getElementById('btnLoyaltySubmit').innerText = 'Crear';
         document.getElementById('btnLoyaltyReset').style.display = 'none';
     }
@@ -88,14 +97,17 @@ class Loyalty {
         name_cell.innerText = this.name;
         const description_cell = row.insertCell(2);
         description_cell.innerText = this.description;
-        const status_cell = row.insertCell(3);
+        const date_end_cell = row.insertCell(3)
+        date_end_cell.innerText = this.dateEnd;
+        const status_cell = row.insertCell(4);
         status_cell.innerHTML = this.#getStatusIcon();
-        const actions_cell = row.insertCell(4);
+        const actions_cell = row.insertCell(5);
         actions_cell.innerHTML = `<div class="row loyalty-programs-actions">
+            <div class="col-md-3"><i onclick="listPromotions(${this.id})" title="Ver las promociones de este programa" class="icon icon-eye-open"></i></div>
             <div class="col-md-3"><i onclick="configLoyalty(${this.id})" title="Ajustes" class="icon icon-cog"></i></div>
-            <div class="col-md-3"><i data-id-program="${this.id}" title="Borrar todas la promociones de este programa" class="icon icon-remove-circle"></i></div>
-            <div class="col-md-3"><i onclick="getDataProgram(${this.id})" title="Editar" class="icon icon-edit"></i></div>
-            <div class="col-md-3"><i onclick="deleteProgram(${this.id})" title="Eliminar" class="icon icon-trash"></i></div>
+            <div class="col-md-2"><i data-id-program="${this.id}" title="Borrar todas la promociones de este programa" class="icon icon-remove-circle"></i></div>
+            <div class="col-md-2"><i onclick="getDataProgram(${this.id})" title="Editar" class="icon icon-edit"></i></div>
+            <div class="col-md-2"><i onclick="deleteProgram(${this.id})" title="Eliminar" class="icon icon-trash"></i></div>
             </div>`;
     }
 
@@ -103,7 +115,8 @@ class Loyalty {
         const row = document.querySelector(`.program-${this.id}`);
         row.cells[1].innerText = this.name;
         row.cells[2].innerText = this.description;
-        row.cells[3].innerHtml = this.#getStatusIcon();
+        row.cells[3].innerText = this.dateEnd;
+        row.cells[4].innerHTML = this.#getStatusIcon();
     }
 
     addRowsProperties() {

@@ -113,12 +113,23 @@ class AdminAjaxLoyaltyController extends ModuleAdminController
         }        
     }
 
+    public function ajaxProcessChangeStatus()
+    {
+        $loyalty = new Loyalty(Tools::getvalue('id_loyalty'));
+        $loyalty->active = !$loyalty->active;
+
+        try {
+            $loyalty->save();
+            $this->ajaxRender(json_encode($loyalty));
+        } catch (Exception $e) {
+            $this->ajaxRender(json_encode(['error' => $e->getMessage()]));
+        }
+    }
+
     public function ajaxProcessRemove()
     {
         try {
             $loyalty = new Loyalty((int)Tools::getvalue('id_loyalty'));
-
-            //var_dump($loyalty->id);
             $loyalty->delete();
 
             $this->ajaxRender(json_encode(['success' => true]));
